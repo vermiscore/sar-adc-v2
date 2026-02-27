@@ -327,3 +327,52 @@ All 16 codes verified with **0.00mV error** at exact transition points.
 | 13 | 1.4625 | 1101 | 0.00mV |
 | 14 | 1.5750 | 1110 | 0.00mV |
 | 15 | 1.6875 | 1111 | 0.00mV |
+
+---
+
+## 8. Real Comparator Integration and Limitations
+
+### 8.1 StrongARM Latch Integration
+
+The StrongARM latch comparator was integrated with the monotonic CDAC in the co-simulation framework. Results for mid-range inputs showed correct operation:
+
+| Vin (V) | Expected | Output | Error |
+|---------|----------|--------|-------|
+| 0.5625 | 0101 (5) | 0101 (5) | 0.00mV |
+| 0.9000 | 1000 (8) | 1000 (8) | 0.00mV |
+| 1.2000 | 1010 (10) | 1011 (11) | 37.50mV |
+
+### 8.2 Low-Voltage Operation Failure
+
+DNL/INL measurement revealed severe nonlinearity at low input codes:
+
+| Code | Vin (V) | Output | DNL (LSB) | INL (LSB) |
+|------|---------|--------|-----------|-----------|
+| 1 | 0.1125 | 5 | +4.000 | +4.000 |
+| 2 | 0.2250 | 5 | +3.000 | +7.000 |
+| 3 | 0.3375 | 5 | +2.000 | +9.000 |
+| 4 | 0.4500 | 0 | -4.000 | +5.000 |
+| 5–15 | 0.5625–1.6875 | Correct | 0.000 | +5.000 |
+
+**Max DNL: +4.0 LSB, Max INL: +9.0 LSB**
+
+### 8.3 Root Cause Analysis
+
+The StrongARM latch requires a minimum common-mode input voltage to operate correctly. When Vdac falls below approximately 0.4V, the input NMOS pair (XM3, XM4) cannot turn on sufficiently, causing the comparator to fail.
+
+This is a fundamental limitation of the Monotonic switching scheme combined with a StrongARM latch:
+```
+Monotonic switching → Vdac approaches 0V for small codes
+StrongARM latch    → Requires Vcm > Vth_n ≈ 0.4V
+→ Incompatibility at low input range
+```
+
+### 8.4 Implications and Future Work
+
+This finding highlights an important design constraint:
+
+1. **Input range limitation**: The effective input range is approximately 0.4V–1.8V, not 0V–1.8V
+2. **Comparator selection**: A PMOS-input or rail-to-rail comparator would be required for full-range operation
+3. **Offset voltage**: The 37.50mV error at Vin=1.2V suggests a comparator offset of approximately 0.33 LSB
+
+These results demonstrate that the choice of switching scheme and comparator topology are tightly coupled in SAR ADC design.
