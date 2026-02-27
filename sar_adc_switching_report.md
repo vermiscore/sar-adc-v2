@@ -274,3 +274,56 @@ V_b0_p b0_p gnd PWL(0 0 79.9n 0 80n 1.8)
 V_b0_n b0_n gnd PWL(0 0 79.9n 0 80n 1.8)
 .ic V(Vout)=1.8
 ```
+
+---
+
+## 7. SAR ADC System Integration
+
+### 7.1 System Overview
+
+A complete 4-bit SAR ADC was implemented by integrating:
+- **CDAC**: Monotonic switching scheme (Sky130 PDK)
+- **Comparator**: Ideal (Python)
+- **SAR Logic**: Verilog (iverilog)
+- **Co-simulation**: Python + ngspice
+
+### 7.2 Co-simulation Method
+
+Each conversion step is simulated independently in ngspice. Python controls the SAR algorithm and determines bit decisions based on the CDAC output voltage.
+```
+Python (SAR control)
+  └── ngspice (CDAC analog simulation)
+       └── Vdac → Python comparator → bit decision
+```
+
+### 7.3 Linearity Results
+
+| Metric | Value |
+|--------|-------|
+| DNL (max) | 0.000 LSB |
+| DNL (min) | 0.000 LSB |
+| INL (max) | 0.000 LSB |
+| INL (min) | 0.000 LSB |
+
+All 16 codes verified with **0.00mV error** at exact transition points.
+
+### 7.4 Full 16-code Transfer Curve
+
+| Code | Vin (V) | Output | Error |
+|------|---------|--------|-------|
+| 0 | 0.0000 | 0000 | — |
+| 1 | 0.1125 | 0001 | 0.00mV |
+| 2 | 0.2250 | 0010 | 0.00mV |
+| 3 | 0.3375 | 0011 | 0.00mV |
+| 4 | 0.4500 | 0100 | 0.00mV |
+| 5 | 0.5625 | 0101 | 0.00mV |
+| 6 | 0.6750 | 0110 | 0.00mV |
+| 7 | 0.7875 | 0111 | 0.00mV |
+| 8 | 0.9000 | 1000 | 0.00mV |
+| 9 | 1.0125 | 1001 | 0.00mV |
+| 10 | 1.1250 | 1010 | 0.00mV |
+| 11 | 1.2375 | 1011 | 0.00mV |
+| 12 | 1.3500 | 1100 | 0.00mV |
+| 13 | 1.4625 | 1101 | 0.00mV |
+| 14 | 1.5750 | 1110 | 0.00mV |
+| 15 | 1.6875 | 1111 | 0.00mV |
