@@ -426,3 +426,49 @@ This offset causes 1–2 LSB errors at low input codes (Vin < 0.2V).
 ### 9.6 Conclusion
 
 The PMOS-input comparator successfully resolves the low-voltage limitation of the NMOS StrongARM latch when combined with monotonic switching CDAC. The remaining offset can be addressed through offset calibration or layout-level symmetry optimization in future work.
+
+---
+
+## 10. PMOS Comparator Debug Notes
+
+### 10.1 Key Issues Encountered in Co-simulation
+
+| Issue | Symptom | Root Cause | Fix |
+|-------|---------|-----------|-----|
+| Vdac = 0V at t=0 | Comparator always fails | Floating node defaults to 0V in ngspice DC operating point | `.ic V(Vdac)=1.8 V(sw0)=1.8 V(sw1)=1.8 V(sw2)=1.8 V(sw3)=1.8` |
+| CDAC kickback | Vdac corrupted during evaluation | Comparator gate current charges/discharges 15fF CDAC node | VCVS buffer: `Ebuf Vdac_buf gnd Vdac gnd 1.0` |
+| Wrong measurement timing | coutp=coutn=VDD always | AT=26n falls in reset phase (clk=Low), not evaluation phase | Changed to AT=23n (clk=High, evaluation complete) |
+| Missing precharge PMOS | Comparator does not resolve | Original circuit had no precharge → coutp/coutn never reach VDD before evaluation | Added XCPr1/XCPr2 with inverted clock signal |
+| NFET/PFET short circuit | Vdac settles to wrong voltage | Separate b_n/b_p signals were driven with opposite polarity, turning on both FETs simultaneously | Unified to single gate signal per bit |
+
+### 10.2 Final Circuit Structure
+```spice
+* Buffer: isolates CDAC from comparator kickback
+Ebuf Vdac_buf gnd Vdac gnd 1.0
+
+* Precharge PMOS (clk=Low → coutp/coutn = VDD)
+XCPr1 coutp clk_n vdd vdd sky130_fd_pr__pfet_01v8 {P}
+XCPr2 coutn clk_n vdd vdd sky130_fd_pr__pfet_01v8 {P}
+
+* PMOS differential input pair
+XCPi1 cnode_p Vin2     vdd vdd sky130_fd_pr__pfet_01v8 {P}
+XCPi2 cnode_n Vdac_buf vdd vdd sky130_fd_pr__pfet_01v8 {P}
+
+* Cross-coupled NMOS latch
+XCNL1 coutp coutn gnd gnd sky130_fd_pr__nfet_01v8 {N}
+XCNL2 coutn coutp gnd gnd sky130_fd_pr__nfet_01v8 {N}
+
+* Evaluation NMOS
+XCNM1 cnode_p clk coutp gnd sky130_fd_pr__nfet_01v8 {N2}
+XCNM2 cnode_n clk coutn gnd sky130_fd_pr__nfet_01v8 {N2}
+
+* Inverted clock for precharge
+Eclk_n clk_n gnd VALUE='1.8 - V(clk)'
+
+* Initial conditions (critical: without this, Vdac = 0V)
+.ic V(Vdac)=1.8 V(sw0)=1.8 V(sw1)=1.8 V(sw2)=1.8 V(sw3)=1.8 V(coutp)=0.9 V(coutn)=0.9
+```
+
+### 10.3 Offset Voltage Measurement
+
+With Vin1=Vin2=0.9V (zero differential input), the comparator resolves to a definite state, confirming a structural offset of approximately 10mV in the Sky130 TT corner. This is attributed to asymmetry in NMOS/PMOS threshold voltages and is consistent with the ~37mV error observed at Vin=1.2V.
