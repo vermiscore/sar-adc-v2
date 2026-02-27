@@ -1,0 +1,14 @@
+
+
+
+delta Vin=10mV
+tdelay              =  3.774261e-10
+
+
+
+
+ΔVin = 1mV（Vin1=0.901）
+ΔVin = 5mV（Vin1=0.905）
+ΔVin = 10mV（Vin1=0.910）
+ΔVin = 50mV（Vin1=0.950）
+ΔVin = 100mV（Vin1=1.000）

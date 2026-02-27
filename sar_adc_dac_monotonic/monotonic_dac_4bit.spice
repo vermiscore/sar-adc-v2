@@ -1,0 +1,45 @@
+** 4-bit Monotonic Switching DAC
+
+C1 Vout sw0 1f m=1
+C2 Vout sw1 2f m=1
+C3 Vout sw2 4f m=1
+C4 Vout sw3 8f m=1
+
+XMN0 sw0 b0_n gnd gnd sky130_fd_pr__nfet_01v8 L=0.15 W=1 nf=1 ad='int((nf+1)/2) * W/nf * 0.29' as='int((nf+2)/2) * W/nf * 0.29' pd='2*int((nf+1)/2) * (W/nf + 0.29)' ps='2*int((nf+2)/2) * (W/nf + 0.29)' nrd='0.29 / W' nrs='0.29 / W' sa=0 sb=0 sd=0 mult=1 m=1
+XMP0 sw0 b0_p vdd vdd sky130_fd_pr__pfet_01v8 L=0.15 W=2 nf=1 ad='int((nf+1)/2) * W/nf * 0.29' as='int((nf+2)/2) * W/nf * 0.29' pd='2*int((nf+1)/2) * (W/nf + 0.29)' ps='2*int((nf+2)/2) * (W/nf + 0.29)' nrd='0.29 / W' nrs='0.29 / W' sa=0 sb=0 sd=0 mult=1 m=1
+
+XMN1 sw1 b1_n gnd gnd sky130_fd_pr__nfet_01v8 L=0.15 W=1 nf=1 ad='int((nf+1)/2) * W/nf * 0.29' as='int((nf+2)/2) * W/nf * 0.29' pd='2*int((nf+1)/2) * (W/nf + 0.29)' ps='2*int((nf+2)/2) * (W/nf + 0.29)' nrd='0.29 / W' nrs='0.29 / W' sa=0 sb=0 sd=0 mult=1 m=1
+XMP1 sw1 b1_p vdd vdd sky130_fd_pr__pfet_01v8 L=0.15 W=2 nf=1 ad='int((nf+1)/2) * W/nf * 0.29' as='int((nf+2)/2) * W/nf * 0.29' pd='2*int((nf+1)/2) * (W/nf + 0.29)' ps='2*int((nf+2)/2) * (W/nf + 0.29)' nrd='0.29 / W' nrs='0.29 / W' sa=0 sb=0 sd=0 mult=1 m=1
+
+XMN2 sw2 b2_n gnd gnd sky130_fd_pr__nfet_01v8 L=0.15 W=1 nf=1 ad='int((nf+1)/2) * W/nf * 0.29' as='int((nf+2)/2) * W/nf * 0.29' pd='2*int((nf+1)/2) * (W/nf + 0.29)' ps='2*int((nf+2)/2) * (W/nf + 0.29)' nrd='0.29 / W' nrs='0.29 / W' sa=0 sb=0 sd=0 mult=1 m=1
+XMP2 sw2 b2_p vdd vdd sky130_fd_pr__pfet_01v8 L=0.15 W=2 nf=1 ad='int((nf+1)/2) * W/nf * 0.29' as='int((nf+2)/2) * W/nf * 0.29' pd='2*int((nf+1)/2) * (W/nf + 0.29)' ps='2*int((nf+2)/2) * (W/nf + 0.29)' nrd='0.29 / W' nrs='0.29 / W' sa=0 sb=0 sd=0 mult=1 m=1
+
+XMN3 sw3 b3_n gnd gnd sky130_fd_pr__nfet_01v8 L=0.15 W=1 nf=1 ad='int((nf+1)/2) * W/nf * 0.29' as='int((nf+2)/2) * W/nf * 0.29' pd='2*int((nf+1)/2) * (W/nf + 0.29)' ps='2*int((nf+2)/2) * (W/nf + 0.29)' nrd='0.29 / W' nrs='0.29 / W' sa=0 sb=0 sd=0 mult=1 m=1
+XMP3 sw3 b3_p vdd vdd sky130_fd_pr__pfet_01v8 L=0.15 W=2 nf=1 ad='int((nf+1)/2) * W/nf * 0.29' as='int((nf+2)/2) * W/nf * 0.29' pd='2*int((nf+1)/2) * (W/nf + 0.29)' ps='2*int((nf+2)/2) * (W/nf + 0.29)' nrd='0.29 / W' nrs='0.29 / W' sa=0 sb=0 sd=0 mult=1 m=1
+
+Vvdd vdd gnd 1.8
+
+Vb3p b3_p gnd PWL(0 0  19.9n 0  20n 1.8)
+Vb3n b3_n gnd PWL(0 0  19.9n 0  20n 1.8)
+Vb2p b2_p gnd PWL(0 0  39.9n 0  40n 1.8)
+Vb2n b2_n gnd PWL(0 0  39.9n 0  40n 1.8)
+Vb1p b1_p gnd PWL(0 0  59.9n 0  60n 1.8)
+Vb1n b1_n gnd PWL(0 0  59.9n 0  60n 1.8)
+Vb0p b0_p gnd PWL(0 0  79.9n 0  80n 1.8)
+Vb0n b0_n gnd PWL(0 0  79.9n 0  80n 1.8)
+
+.ic V(Vout)=1.8
+
+.tran 10p 100n
+
+.lib /home/user/.volare/volare/sky130/versions/0fe599b2afb6708d281543108caf8310912f54af/sky130A/libs.tech/ngspice/sky130.lib.spice tt
+
+.control
+run
+plot V(Vout) title 'Monotonic DAC Output'
+meas tran E_total integral V(vdd)*(-I(Vvdd)) from=0 to=100n
+echo "Monotonic DAC Energy = $&E_total J"
+echo "Conventional DAC Energy = 16.5e-15 J"
+.endc
+
+.end
