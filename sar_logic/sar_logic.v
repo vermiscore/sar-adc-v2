@@ -15,10 +15,10 @@ module sar_logic (
         end else begin
             case (state)
                 3'd0: begin b3<=1; b2<=0; b1<=0; b0<=0; eoc<=0; state<=3'd1; end
-                3'd1: begin b3<=comp_out?0:1; b2<=1; state<=3'd2; end
-                3'd2: begin b2<=comp_out?0:1; b1<=1; state<=3'd3; end
-                3'd3: begin b1<=comp_out?0:1; b0<=1; state<=3'd4; end
-                3'd4: begin b0<=comp_out?0:1; eoc<=1; state<=3'd0; end
+                3'd1: begin b3<=comp_out; b2<=1; state<=3'd2; end
+                3'd2: begin b2<=comp_out; b1<=1; state<=3'd3; end
+                3'd3: begin b1<=comp_out; b0<=1; state<=3'd4; end
+                3'd4: begin b0<=comp_out; eoc<=1; state<=3'd0; end
                 default: state<=3'd0;
             endcase
         end
