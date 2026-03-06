@@ -23,7 +23,8 @@ C1 Vdac sw0 1f m=1
 C2 Vdac sw1 2f m=1
 C3 Vdac sw2 4f m=1
 C4 Vdac sw3 8f m=1
-Rleak Vdac gnd 1G
+Cdummy Vdac gnd 1f
+Rleak Vdac gnd 1T
 XMN0 sw0 b0_n gnd gnd sky130_fd_pr__nfet_01v8 {N}
 XMP0 sw0 b0_p vdd vdd sky130_fd_pr__pfet_01v8 {P}
 XMN1 sw1 b1_n gnd gnd sky130_fd_pr__nfet_01v8 {N}
@@ -41,9 +42,9 @@ Vb1p b1_p gnd {pwl(bits[2])}
 Vb1n b1_n gnd {pwl(bits[2])}
 Vb0p b0_p gnd {pwl(bits[3])}
 Vb0n b0_n gnd {pwl(bits[3])}
-.ic V(Vdac)=1.8
-.tran 10p 20n
-.measure tran Vdac_final FIND V(Vdac) AT=18n
+.ic V(Vdac)=1.6875
+.tran 10p 60n
+.measure tran Vdac_final FIND V(Vdac) AT=55n
 .end
 """
     with open('/tmp/sar_step.spice', 'w') as f:
@@ -69,7 +70,7 @@ def sar_adc_convert(vin, vref=1.8):
             print(f"ERROR at step {step+1}")
             return None
 
-        comp = 1 if vdac > vin else 0
+        comp = 1 if vdac >= vin else 0
         confirmed[step] = 0 if comp else 1
 
         print(f"Step {step+1}: B{3-step} | Vdac={vdac:.4f}V | {'→0' if comp else '→1'} | bits={''.join(map(str,confirmed))}")
@@ -79,17 +80,17 @@ def sar_adc_convert(vin, vref=1.8):
     print(f"Result: {''.join(map(str,confirmed))} ({digital}) → {vrecon:.4f}V | Error: {abs(vin-vrecon)*1000:.2f}mV")
     return digital
 
-sar_adc_convert(0.5625)
-sar_adc_convert(1.2)
-sar_adc_convert(0.9)
+if __name__ == "__main__":
+    sar_adc_convert(0.5625)
+    sar_adc_convert(1.2)
+    sar_adc_convert(0.9)
 
-print("\n=== Full 16-code Test ===")
-errors = []
-for code in range(16):
-    vin = (code + 0.5) / 16 * 1.8
-    result = sar_adc_convert(vin)
-    if result is not None:
-        errors.append(abs(result - code))
-
-print(f"\nMax error: {max(errors):.1f} LSB")
-print(f"Mean error: {sum(errors)/len(errors):.2f} LSB")
+    print("\n=== Full 16-code Test ===")
+    errors = []
+    for code in range(16):
+        vin = (code + 0.5) / 16 * 1.8
+        result = sar_adc_convert(vin)
+        if result is not None:
+            errors.append(abs(result - code))
+    print(f"\nMax error: {max(errors):.1f} LSB")
+    print(f"Mean error: {sum(errors)/len(errors):.2f} LSB")
